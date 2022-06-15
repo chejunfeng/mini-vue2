@@ -1,0 +1,22 @@
+{
+  "name": "mini-vue2",
+  "version": "1.0.0",
+  "description": "手写Vue2源码",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rollup -cw"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/chejf/mini-vue2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.18.5",
+    "@babel/preset-env": "^7.18.2",
+    "rollup": "^2.75.6",
+    "rollup-plugin-babel": "^4.4.0"
+  }
+}

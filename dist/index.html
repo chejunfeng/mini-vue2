@@ -1,34 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-  </head>
-  <body>
+</head>
+
+<body>
     <script src="vue.js"></script>
     <script>
-      // 响应式的数据变化，数据变化了我可以监控到数据的变化
-      // 数据的取值和更改至我们要监控到
-      const vm = new Vue({
-        data() {
-          return {
-            msg: "hello world",
-            age: 18,
-            obj: {
-              test: 123,
-              testObj: {
-                a: 1,
-              },
+        // 响应式的数据变化，数据变化了我可以监控到数据的变化
+        // 数据的取值和更改至我们要监控到
+        const vm = new Vue({
+            data() {
+                return {
+                    msg: "hello world",
+                    age: 18,
+                    obj: {
+                        test: 123,
+                        testObj: {
+                            a: 1,
+                        },
+                    },
+                    arr: [123, { a: 1 }]
+                };
             },
-            arr: [123,{a:1}]
-          };
-        },
-      });
-      console.log("🚀 ~ file: index.html ~ line 21 ~ vm", vm.age);
-      console.log("🚀 ~ file: index.html ~ line 21 ~ vm", vm.obj.testObj);
-      console.log("🚀 ~ file: index.html ~ line 31 ~ vm", vm);
+        });
+        vm.arr.push(12, 22, 32, { test: 2 })
+        console.log("🚀 ~ file: index.html ~ line 21 ~ vm", vm.age);
+        console.log("🚀 ~ file: index.html ~ line 21 ~ vm", vm.obj.testObj);
+        console.log("🚀 ~ file: index.html ~ line 31 ~ vm", vm);
     </script>
-  </body>
+</body>
+
 </html>

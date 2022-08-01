@@ -1,7 +1,11 @@
-import newArrayProto from "./array";
+import { newArrayProto } from "./array";
 class Observer {
   constructor(data) {
-    data.__ob__ = this; // 给数据加了一个标识，如果数据上有__ob__则说明这个属性被观测过了
+    // 给数据加了一个标识，如果数据上有__ob__则说明这个属性被观测过了
+    Object.defineProperty(data, "__ob__", {
+      value: this,
+      enumerable: false, // 将__ob__变成不可枚举（循环的时候无法获取到）
+    });
     // Object.defineProperty只能劫持已经存在的属性（Vue里面会为此单独写一些api $set $delete）
     if (Array.isArray(data)) {
       // 这里我们可以重写数组中的变异方法

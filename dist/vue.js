@@ -44,7 +44,13 @@
       _classCallCheck(this, Observer);
 
       // Object.defineProperty只能劫持已经存在的属性（Vue里面会为此单独写一些api $set $delete）
-      this.walk(data);
+      if (Array.isArray(data)) {
+        // 这里我们可以重写数组中的变异方法
+        // 7个变异方法 push pop shift unshift splice reverse sort 是可以修改数组本身的
+        this.observeArray(data);
+      } else {
+        this.walk(data);
+      }
     }
 
     _createClass(Observer, [{
@@ -54,6 +60,15 @@
         // 重新定义属性（存在性能问题，Vue3使用proxy解决）
         Object.keys(data).forEach(function (key) {
           return defineReactive(data, key, data[key]);
+        });
+      }
+    }, {
+      key: "observeArray",
+      value: function observeArray(data) {
+        // 观测数组
+        // 如果数组中放的是对象 也可以监控到对象的变化
+        data.forEach(function (item) {
+          return observe(item);
         });
       }
     }]);
@@ -70,7 +85,9 @@
         return value;
       },
       set: function set(newValue) {
-        if (newValue === value) return;
+        if (newValue === value) return; // 用户设置的值也需要进行代理（存在将原属性值设置为新对象的情况）
+
+        observe(newValue);
         value = newValue;
       }
     });

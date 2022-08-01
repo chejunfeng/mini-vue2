@@ -17,20 +17,18 @@
             msg: "hello world",
             age: 18,
             obj: {
-                test: 123,
-                testObj: {
-                    a: 1
-                }
-            }
+              test: 123,
+              testObj: {
+                a: 1,
+              },
+            },
+            arr: [123,{a:1}]
           };
         },
       });
-      vm.obj.testObj.a = {
-        b:1
-      }
       console.log("🚀 ~ file: index.html ~ line 21 ~ vm", vm.age);
       console.log("🚀 ~ file: index.html ~ line 21 ~ vm", vm.obj.testObj);
-      console.log("🚀 ~ file: index.html ~ line 31 ~ vm", vm)
+      console.log("🚀 ~ file: index.html ~ line 31 ~ vm", vm);
     </script>
   </body>
 </html>

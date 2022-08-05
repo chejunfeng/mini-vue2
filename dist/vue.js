@@ -189,6 +189,10 @@
     }
   }
 
+  function compileToFunction(template) {// 1.将template转化成ast语法树
+    // 2.生成render方法（render方法执行后的返回结果就是虚拟DOM）
+  }
+
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
       // vue vm.$options 就是获取用户的配置
@@ -197,6 +201,38 @@
       // 初始化状态
 
       initState(vm);
+
+      if (options.el) {
+        vm.$mount(options.el); // 实现数据的挂载
+      }
+    };
+
+    Vue.prototype.$mount = function (el) {
+      var vm = this;
+      el = document.querySelector(el);
+      var ops = vm.$options;
+
+      if (!ops.render) {
+        // 先进行查找有没有render函数
+        var template; // 没有render看一下是否写了template，没写template采用外部的template
+
+        if (!ops.template && el) {
+          // 没有写模版，但写了el
+          template = el.outerHTML;
+        } else {
+          if (el) {
+            template = ops.template; // 如果有el，则采用模版的内容
+          }
+        }
+
+        if (template) {
+          // 这里需要对模版进行编译
+          var render = compileToFunction();
+          ops.render = render;
+        }
+      }
+
+      ops.render; // 最终就可以获取render方法
     };
   }
 

@@ -9,8 +9,8 @@
 </head>
 
 <body>
-  <div id="app">
-    <div>{{msg}}23<span>222</span></div>
+  <div id="app" style="overflow: hidden">
+    <div key="1111">{{msg}}23阿斯达<span>222</span></div>
     <div>{{age}}</div>
   </div>
   <script src="vue.js"></script>
@@ -28,17 +28,23 @@
               a: 1,
             },
           },
-          arr: [123, { a: 1 }],
+          arr: [123, { a: 1, test: 2 }],
         };
       },
       el: "#app", // 我们要将数据解析到el元素上
     });
-      // 1.模版引擎 性能差 需要正则匹配替换 1.0 的时候没有引入虚拟DOM的改变
-      // 2.采用虚拟DOM，数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
-      // 3.核心就是我们需要将模版变成我们的js语法，通过js语法生成虚拟DOM
+    // 1）将数据先处理成响应式 initState（针对对象来说主要是增加defineProperty 针对数据就是重写方法）
+    // 2）模板编译：将模版先转换成ast语法树，将ast语法树生成render方法
+    // 3）调用render函数 会进行取值操作 产生对应的虚拟DOM render(){ _c('div',null,_v(name)) }
+    // 4）将虚拟DOM渲染成真实DOM
 
-      // 从一个东西变成另一个东西 语法之间的转化 es6 -> es5
-      // css压缩 我们需要先变成语法树再重新组装代码成为新的语法 将template语法转换成render函数
+
+    // 1.模版引擎 性能差 需要正则匹配替换 1.0 的时候没有引入虚拟DOM的改变
+    // 2.采用虚拟DOM，数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
+    // 3.核心就是我们需要将模版变成我们的js语法，通过js语法生成虚拟DOM
+
+    // 从一个东西变成另一个东西 语法之间的转化 es6 -> es5
+    // css压缩 我们需要先变成语法树再重新组装代码成为新的语法 将template语法转换成render函数
   </script>
 </body>
 

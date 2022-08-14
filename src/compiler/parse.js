@@ -5,7 +5,6 @@ const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`);
 const attribute =
   /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
 const startTagClose = /^\s*(\/?)>/;
-const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
 
 // 对模版进行编译处理
 export function parseHTML(html) {
@@ -68,7 +67,7 @@ export function parseHTML(html) {
     if (start) {
       const match = {
         tagName: start[1], // 标签名
-        atts: [],
+        attrs: [],
       };
       advance(start[0].length);
       // 如果不是开始标签的结束 就一直匹配下去
@@ -78,7 +77,7 @@ export function parseHTML(html) {
         (attr = html.match(attribute))
       ) {
         advance(attr[0].length);
-        match.atts.push({
+        match.attrs.push({
           name: attr[1],
           value: attr[3] || attr[4] || attr[5] || true,
         });

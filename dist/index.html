@@ -1,51 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Document</title>
-</head>
-
-<body>
-  <div id="app" style="overflow: hidden">
-    <div key="1111">{{msg}}23阿斯达<span>222</span></div>
-    <div>{{age}}</div>
-  </div>
-  <script src="vue.js"></script>
-  <script>
-    // 响应式的数据变化，数据变化了我可以监控到数据的变化
-    // 数据的取值和更改至我们要监控到
-    const vm = new Vue({
-      data() {
-        return {
-          msg: "hello world",
-          age: 18,
-          obj: {
-            test: 123,
-            testObj: {
-              a: 1,
+  <body>
+    <!-- 给模版中的属性增加一个收集器 dep -->
+    <!-- 页面渲染的时候 将渲染逻辑封装到watcher中 vm._update(vm._render()) -->
+    <!-- 让dep记住这个watcher即可，稍后属性变化了可以找到对应的dep中存放的watcher进行重新渲染 -->
+    <!-- 观察者模式 -->
+    <div id="app" style="overflow: hidden">
+      <div key="1111">{{msg}}23阿斯达<span>222</span></div>
+      <div>{{age}}</div>
+      <div>{{age}}</div>
+      <div>{{age}}</div>
+    </div>
+    <script src="vue.js"></script>
+    <script>
+      // 响应式的数据变化，数据变化了我可以监控到数据的变化
+      // 数据的取值和更改至我们要监控到
+      const vm = new Vue({
+        data() {
+          return {
+            msg: "hello world",
+            age: 18,
+            obj: {
+              test: 123,
+              testObj: {
+                a: 1,
+              },
             },
-          },
-          arr: [123, { a: 1, test: 2 }],
-        };
-      },
-      el: "#app", // 我们要将数据解析到el元素上
-    });
-    // 1）将数据先处理成响应式 initState（针对对象来说主要是增加defineProperty 针对数据就是重写方法）
-    // 2）模板编译：将模版先转换成ast语法树，将ast语法树生成render方法
-    // 3）调用render函数 会进行取值操作 产生对应的虚拟DOM render(){ _c('div',null,_v(name)) }
-    // 4）将虚拟DOM渲染成真实DOM
+            arr: [123, { a: 1, test: 2 }],
+          };
+        },
+        el: "#app", // 我们要将数据解析到el元素上
+      });
+      setTimeout(() => {
+        vm.age = "ahhahaha";
+        vm.msg = "ahhahaha";
+        vm.arr = "ahhahaha";
+      }, 3000);
+      // 1）将数据先处理成响应式 initState（针对对象来说主要是增加defineProperty 针对数据就是重写方法）
+      // 2）模板编译：将模版先转换成ast语法树，将ast语法树生成render方法
+      // 3）调用render函数 会进行取值操作 产生对应的虚拟DOM render(){ _c('div',null,_v(name)) }
+      // 4）将虚拟DOM渲染成真实DOM
 
+      // 1.模版引擎 性能差 需要正则匹配替换 1.0 的时候没有引入虚拟DOM的改变
+      // 2.采用虚拟DOM，数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
+      // 3.核心就是我们需要将模版变成我们的js语法，通过js语法生成虚拟DOM
 
-    // 1.模版引擎 性能差 需要正则匹配替换 1.0 的时候没有引入虚拟DOM的改变
-    // 2.采用虚拟DOM，数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
-    // 3.核心就是我们需要将模版变成我们的js语法，通过js语法生成虚拟DOM
-
-    // 从一个东西变成另一个东西 语法之间的转化 es6 -> es5
-    // css压缩 我们需要先变成语法树再重新组装代码成为新的语法 将template语法转换成render函数
-  </script>
-</body>
-
+      // 从一个东西变成另一个东西 语法之间的转化 es6 -> es5
+      // css压缩 我们需要先变成语法树再重新组装代码成为新的语法 将template语法转换成render函数
+    </script>
+  </body>
 </html>

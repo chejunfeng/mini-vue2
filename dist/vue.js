@@ -4,6 +4,59 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 })(this, (function () { 'use strict';
 
+  // 静态方法
+  var strategies = {};
+  var LIFECYCLE = ["beforeCreate", "created"];
+  LIFECYCLE.forEach(function (hook) {
+    strategies[hook] = function (p, c) {
+      if (c) {
+        // 如果儿子有 父亲有 让父亲和儿子拼在一起
+        if (p) {
+          return p.concat(c);
+        } else {
+          // 儿子有 父亲没有 将儿子包装成数组
+          return [c];
+        }
+      } else {
+        // 儿子没有 用父亲的
+        return p;
+      }
+    };
+  });
+  function mergeOptions(parent, child) {
+    var options = {};
+
+    for (var key in parent) {
+      mergeField(key);
+    }
+
+    for (var _key in child) {
+      if (!parent.hasOwnProperty(_key)) {
+        mergeField(_key);
+      }
+    }
+
+    function mergeField(key) {
+      // 策略模式 减少if-else
+      if (strategies[key]) {
+        options[key] = strategies[key](parent[key], child[key]);
+      } else {
+        options[key] = child[key] || parent[key]; // 优先采用儿子，在采用父亲
+      }
+    }
+
+    return options;
+  }
+
+  function initGlobalAPI(Vue) {
+    Vue.options = {};
+
+    Vue.mixin = function (mixin) {
+      this.options = mergeOptions(this.options, mixin);
+      return this;
+    };
+  }
+
   function _typeof(obj) {
     "@babel/helpers - typeof";
 
@@ -557,13 +610,94 @@
     }, {
       key: "update",
       value: function update() {
-        console.log("update");
-        this.get(); // 重新渲染
+        queueWatcher(this); // 把当前的watcher暂存起来
+      }
+    }, {
+      key: "run",
+      value: function run() {
+        this.get();
       }
     }]);
 
     return Watcher;
   }();
+
+  var queue = [];
+  var has = {};
+  var pending = false;
+
+  function flushSchedulerQueue() {
+    var flushQueue = queue.slice(0);
+    queue = [];
+    has = {};
+    pending = false;
+    flushQueue.forEach(function (q) {
+      return q.run();
+    }); // 在刷新的过程中可能还有新的watcher 重新放到queue中
+  }
+
+  function queueWatcher(watcher) {
+    var id = watcher.id;
+
+    if (!has[id]) {
+      queue.push(watcher);
+      has[id] = true; // 不管update执行多少次，最终只执行一轮刷新操作
+
+      if (!pending) {
+        nextTick(flushSchedulerQueue);
+        pending = true;
+      }
+    }
+  }
+
+  var callbacks = [];
+  var waiting = false;
+
+  function flushCallbacks() {
+    var cbs = callbacks.slice(0);
+    waiting = false;
+    callbacks = [];
+    cbs.forEach(function (cb) {
+      return cb();
+    }); // 按照顺序依次执行
+  } // nextTick没有直接使用某个api 而是采用优雅降级的方式
+
+
+  var timerFunc;
+
+  if (Promise) {
+    timerFunc = function timerFunc() {
+      Promise.resolve().then(flushCallbacks);
+    };
+  } else if (MutationObserver) {
+    var observer = new MutationObserver(flushCallbacks); // 这里传入的回调是异步执行的
+
+    var textNode = document.createTextNode(1);
+    observer.observe(textNode, {
+      characterData: true
+    });
+
+    timerFunc = function timerFunc() {
+      textNode.textContent = 2;
+    };
+  } else if (setImmediate) {
+    timerFunc = function timerFunc() {
+      setImmediate(flushCallbacks);
+    };
+  } else {
+    timerFunc = function timerFunc() {
+      setTimeout(flushCallbacks);
+    };
+  }
+
+  function nextTick(cb) {
+    callbacks.push(cb);
+
+    if (!waiting) {
+      timerFunc();
+      waiting = true;
+    }
+  }
 
   function createElementVNode(vm, tag, data) {
     if (data == null) {
@@ -696,14 +830,26 @@
   // 5) 根据生成的虚拟节点创造真实的DOM
   // 后续每次数据更新可以只执行render函数（无需再次执行ast转化的过程）
 
+  function callHook(vm, hook) {
+    var handlers = vm.$options[hook];
+
+    if (handlers) {
+      handlers.forEach(function (handler) {
+        return handler.call(vm);
+      });
+    }
+  }
+
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
       // vue vm.$options 就是获取用户的配置
       var vm = this;
-      vm.$options = options; // 将用户的选项挂载到实例上
-      // 初始化状态
+      vm.$options = mergeOptions(this.constructor.options, options); // 将用户的选项挂载到实例上
+
+      callHook(vm, "beforeCreate"); // 初始化状态
 
       initState(vm);
+      callHook(vm, "created");
 
       if (options.el) {
         vm.$mount(options.el); // 实现数据的挂载
@@ -744,9 +890,11 @@
     this._init(options);
   }
 
+  Vue.prototype.$nextTick = nextTick;
   initMixin(Vue); // 扩展了init方法
 
   initLifeCycle(Vue);
+  initGlobalAPI(Vue);
 
   return Vue;
 

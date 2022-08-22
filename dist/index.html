@@ -20,6 +20,16 @@
     </div>
     <script src="vue.js"></script>
     <script>
+      Vue.mixin({
+        created() {
+          console.log(2);
+        },
+      });
+      Vue.mixin({
+        created() {
+          console.log(1);
+        },
+      });
       // 响应式的数据变化，数据变化了我可以监控到数据的变化
       // 数据的取值和更改至我们要监控到
       const vm = new Vue({
@@ -36,13 +46,23 @@
             arr: [123, { a: 1, test: 2 }],
           };
         },
+        created() {
+          console.log(3);
+        },
         el: "#app", // 我们要将数据解析到el元素上
       });
+      vm.$nextTick(() => {
+        console.log(app.innerHTML);
+      });
+      vm.age = "ahhahaha";
+      vm.$nextTick(() => {
+        console.log(app.innerHTML);
+      });
       setTimeout(() => {
-        vm.age = "ahhahaha";
         vm.msg = "ahhahaha";
         vm.arr = "ahhahaha";
       }, 3000);
+
       // 1）将数据先处理成响应式 initState（针对对象来说主要是增加defineProperty 针对数据就是重写方法）
       // 2）模板编译：将模版先转换成ast语法树，将ast语法树生成render方法
       // 3）调用render函数 会进行取值操作 产生对应的虚拟DOM render(){ _c('div',null,_v(name)) }

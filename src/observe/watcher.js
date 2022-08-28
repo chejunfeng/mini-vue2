@@ -1,4 +1,4 @@
-import Dep from "./dep";
+import Dep, { popTarget, pushTarget } from "./dep";
 
 let id = 0;
 
@@ -7,13 +7,24 @@ let id = 0;
 // 每个属性都有一个dep（属性就是被观察者，属性变化了会通知观察者来更新），watcher就是观察者 -> 观察者模式
 
 class Watcher {
-  constructor(vm, fn, options) {
+  constructor(vm, exprOrFn, options, cb) {
+    this.vm = vm;
+    this.cb = cb;
     this.id = id++;
     this.renderWatcher = options; // 是一个渲染watcher
-    this.getter = fn; // getter意味着调用这个函数可以发生取值操作
+    if (typeof exprOrFn === "string") {
+      this.getter = function () {
+        return vm[exprOrFn];
+      };
+    } else {
+      this.getter = exprOrFn; // getter意味着调用这个函数可以发生取值操作
+    }
     this.deps = []; // 实现计算属性和一些清理工作需要用到
     this.depsId = new Set();
-    this.get();
+    this.lazy = options.lazy;
+    this.dirty = this.lazy; // 缓存值
+    this.user = options.user; // 标识是否是自己的watcher
+    this.value = this.lazy ? undefined : this.get();
   }
   addDep(dep) {
     // 一个组件 对应多个属性 重复的属性不用记录
@@ -24,16 +35,36 @@ class Watcher {
       dep.addSub(this); // watcher已经记住了dep而且去重了，此时让dep也记住watcher
     }
   }
+  evaluate() {
+    this.value = this.get(); // 获取到用户函数的返回值并且还要标识为脏
+    this.dirty = false;
+  }
   get() {
-    Dep.target = this; // 静态属性就是只有一份
-    this.getter(); // 会去vm上取值 vm._update(vm._render)
-    Dep.target = null; // 渲染完毕后就清空
+    pushTarget(this); // 静态属性就是只有一份
+    const value = this.getter.call(this.vm); // 会去vm上取值 vm._update(vm._render)
+    popTarget(); // 渲染完毕后就清空
+    return value;
+  }
+  depend() {
+    // watcher的depend就是让dep去调depend
+    let i = this.deps.length;
+    while (i--) {
+      this.deps[i].depend(); // 让计算属性watcher也收集渲染watcher
+    }
   }
   update() {
-    queueWatcher(this); // 把当前的watcher暂存起来
+    if (this.lazy) {
+      this.dirty = true;
+    } else {
+      queueWatcher(this); // 把当前的watcher暂存起来
+    }
   }
   run() {
-    this.get();
+    let oldValue = this.value;
+    let newValue = this.get();
+    if (this.user) {
+      this.cb.call(this.vm, newValue, oldValue);
+    }
   }
 }
 

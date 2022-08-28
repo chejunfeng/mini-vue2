@@ -2,6 +2,8 @@ import { newArrayProto } from "./array";
 import Dep from "./dep";
 class Observer {
   constructor(data) {
+    // 给每个对象都增加收集功能
+    this.dep = new Dep();
     // 给数据加了一个标识，如果数据上有__ob__则说明这个属性被观测过了
     Object.defineProperty(data, "__ob__", {
       value: this,
@@ -29,8 +31,19 @@ class Observer {
   }
 }
 
+// 深层次嵌套会递归，递归多了性能差，不存在的属性监听不到，存在的属性要重写方法
+function dependArray(value) {
+  for (let i = 0; i < value.length; i++) {
+    let current = value[i];
+    current.__ob__ && current.__ob__.dep.depend();
+    if (Array.isArray(current)) {
+      dependArray(current);
+    }
+  }
+}
+
 export function defineReactive(target, key, value) {
-  observe(value); // 对所有的对象都进行属性劫持
+  let childOb = observe(value); // 对所有的对象都进行属性劫持
   let dep = new Dep(); // 每一个属性都有一个dep
   // 闭包 属性劫持
   Object.defineProperty(target, key, {
@@ -38,6 +51,12 @@ export function defineReactive(target, key, value) {
       // 取值的时候会执行get
       if (Dep.target) {
         dep.depend(); // 让这个属性的收集器记住当前的watcher
+        if (childOb) {
+          childOb.dep.depend(); // 让数组和对象本身也实现依赖收集
+          if (Array.isArray(value)) {
+            dependArray(value);
+          }
+        }
       }
       return value;
     },

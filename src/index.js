@@ -1,7 +1,7 @@
 import { initGlobalAPI } from "./globalAPI";
 import { initMixin } from "./init";
 import { initLifeCycle } from "./lifecycle";
-import { nextTick } from "./observe/watcher";
+import Watcher, { nextTick } from "./observe/watcher";
 
 function Vue(options) {
   // options就是用户的选项
@@ -12,5 +12,8 @@ Vue.prototype.$nextTick = nextTick;
 initMixin(Vue); // 扩展了init方法
 initLifeCycle(Vue);
 initGlobalAPI(Vue);
+Vue.prototype.$watch = function (exprOrFn, cb) {
+  new Watcher(this, exprOrFn, { user: true }, cb);
+};
 
 export default Vue;

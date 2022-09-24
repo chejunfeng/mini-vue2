@@ -17,10 +17,10 @@ initGlobalAPI(Vue);
 initStateMixin(Vue);
 
 let render1 = compileToFunction(`<ul>
-<li key="4">4</li>
-<li key="1">1</li>
-<li key="2">2</li>
-<li key="3">3</li>
+<li key="d">4</li>
+<li key="b">1</li>
+<li key="c">2</li>
+<li key="e">3</li>
 </ul>`);
 let vm1 = new Vue({ data: { name: "test" } });
 let prevVnode = render1.call(vm1);

@@ -1026,9 +1026,24 @@
     var oldEndVnode = oldChildren[oldEndIndex];
     var newEndVnode = newChildren[newEndIndex];
 
+    function makeIndexByKey(children) {
+      var map = {};
+      children.forEach(function (child, index) {
+        map[child.key] = index;
+      });
+      return map;
+    }
+
+    var map = makeIndexByKey(oldChildren);
+
     while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
-      // 双方有一方头指针大于尾部指针则停止循环
-      if (isSameVnode(oldStartVnode, newStartVnode)) {
+      // 如果有节点为空则指向下一个
+      if (!oldStartVnode) {
+        oldStartVnode = oldChildren[++oldStartIndex];
+      } else if (!oldEndVnode) {
+        oldEndVnode = oldChildren[--oldEndIndex];
+      } // 双方有一方头指针大于尾部指针则停止循环
+      else if (isSameVnode(oldStartVnode, newStartVnode)) {
         // 比较 头头 节点
         patchVnode(oldStartVnode, newStartVnode); // 如果是相同节点 则递归比较子节点
 
@@ -1045,6 +1060,28 @@
         patchVnode(oldEndVnode, newStartVnode);
         el.insertBefore(oldEndVnode.el, oldStartVnode.el);
         oldEndVnode = oldChildren[--oldEndIndex];
+        newStartVnode = newChildren[++newStartIndex];
+      } else if (isSameVnode(oldStartVnode, newEndVnode)) {
+        // 比较 头尾 节点
+        patchVnode(oldStartVnode, newEndVnode);
+        el.insertBefore(oldStartVnode.el, oldEndVnode.el.nextSibling);
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newEndVnode = newChildren[--newEndIndex];
+      } else {
+        // 乱序比对
+        // 根据老的列表做一个映射关系，用新的去找，如果找到则移动，找不到则添加，最后多余的老元素就删除
+        var moveIndex = map[newStartVnode.key]; // 如果找到则说明是要移动的元素
+
+        if (moveIndex !== undefined) {
+          var moveVnode = oldChildren[moveIndex];
+          el.insertBefore(moveVnode.el, oldStartVnode.el);
+          oldChildren[moveIndex] = undefined; // 表示这个节点已经移动走了
+
+          patchVnode(moveVnode, newStartVnode);
+        } else {
+          el.insertBefore(createElm(newStartVnode), oldStartVnode.el); // 找不到则添加一个新元素
+        }
+
         newStartVnode = newChildren[++newStartIndex];
       }
     } // 多余的新节点插入进去
@@ -1063,8 +1100,10 @@
 
     if (oldStartIndex <= oldEndIndex) {
       for (var _i = oldStartIndex; _i <= oldEndIndex; _i++) {
-        var _childEl = oldChildren[_i].el;
-        el.removeChild(_childEl);
+        if (oldChildren[_i]) {
+          var _childEl = oldChildren[_i].el;
+          el.removeChild(_childEl);
+        }
       }
     }
   }
@@ -1184,7 +1223,7 @@
   initLifeCycle(Vue);
   initGlobalAPI(Vue);
   initStateMixin(Vue);
-  var render1 = compileToFunction("<ul>\n<li key=\"4\">4</li>\n<li key=\"1\">1</li>\n<li key=\"2\">2</li>\n<li key=\"3\">3</li>\n</ul>");
+  var render1 = compileToFunction("<ul>\n<li key=\"d\">4</li>\n<li key=\"b\">1</li>\n<li key=\"c\">2</li>\n<li key=\"e\">3</li>\n</ul>");
   var vm1 = new Vue({
     data: {
       name: "test"

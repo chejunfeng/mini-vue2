@@ -120,9 +120,24 @@ function updateChildren(el, oldChildren, newChildren) {
   let oldEndVnode = oldChildren[oldEndIndex];
   let newEndVnode = newChildren[newEndIndex];
 
+  function makeIndexByKey(children) {
+    let map = {};
+    children.forEach((child, index) => {
+      map[child.key] = index;
+    });
+    return map;
+  }
+  let map = makeIndexByKey(oldChildren);
+
   while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
+    // 如果有节点为空则指向下一个
+    if (!oldStartVnode) {
+      oldStartVnode = oldChildren[++oldStartIndex];
+    } else if (!oldEndVnode) {
+      oldEndVnode = oldChildren[--oldEndIndex];
+    }
     // 双方有一方头指针大于尾部指针则停止循环
-    if (isSameVnode(oldStartVnode, newStartVnode)) {
+    else if (isSameVnode(oldStartVnode, newStartVnode)) {
       // 比较 头头 节点
       patchVnode(oldStartVnode, newStartVnode); // 如果是相同节点 则递归比较子节点
       oldStartVnode = oldChildren[++oldStartIndex];
@@ -137,6 +152,25 @@ function updateChildren(el, oldChildren, newChildren) {
       patchVnode(oldEndVnode, newStartVnode);
       el.insertBefore(oldEndVnode.el, oldStartVnode.el);
       oldEndVnode = oldChildren[--oldEndIndex];
+      newStartVnode = newChildren[++newStartIndex];
+    } else if (isSameVnode(oldStartVnode, newEndVnode)) {
+      // 比较 头尾 节点
+      patchVnode(oldStartVnode, newEndVnode);
+      el.insertBefore(oldStartVnode.el, oldEndVnode.el.nextSibling);
+      oldStartVnode = oldChildren[++oldStartIndex];
+      newEndVnode = newChildren[--newEndIndex];
+    } else {
+      // 乱序比对
+      // 根据老的列表做一个映射关系，用新的去找，如果找到则移动，找不到则添加，最后多余的老元素就删除
+      let moveIndex = map[newStartVnode.key]; // 如果找到则说明是要移动的元素
+      if (moveIndex !== undefined) {
+        let moveVnode = oldChildren[moveIndex];
+        el.insertBefore(moveVnode.el, oldStartVnode.el);
+        oldChildren[moveIndex] = undefined; // 表示这个节点已经移动走了
+        patchVnode(moveVnode, newStartVnode);
+      } else {
+        el.insertBefore(createElm(newStartVnode), oldStartVnode.el); // 找不到则添加一个新元素
+      }
       newStartVnode = newChildren[++newStartIndex];
     }
   }
@@ -156,8 +190,10 @@ function updateChildren(el, oldChildren, newChildren) {
   // 多余的老节点删除
   if (oldStartIndex <= oldEndIndex) {
     for (let i = oldStartIndex; i <= oldEndIndex; i++) {
-      let childEl = oldChildren[i].el;
-      el.removeChild(childEl);
+      if (oldChildren[i]) {
+        let childEl = oldChildren[i].el;
+        el.removeChild(childEl);
+      }
     }
   }
 }

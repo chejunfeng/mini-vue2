@@ -1,6 +1,6 @@
 import Dep from "./observe/dep";
 import { observe } from "./observe/index";
-import Watcher from "./observe/watcher";
+import Watcher, { nextTick } from "./observe/watcher";
 
 export function initState(vm) {
   const opts = vm.$options; // 获取用户的配置
@@ -70,6 +70,13 @@ function initComputed(vm) {
     watchers[key] = new Watcher(vm, fn, { lazy: true });
     defineComputed(vm, key, userDef);
   }
+}
+
+export function initStateMixin(Vue) {
+  Vue.prototype.$nextTick = nextTick;
+  Vue.prototype.$watch = function (exprOrFn, cb) {
+    new Watcher(this, exprOrFn, { user: true }, cb);
+  };
 }
 
 function defineComputed(target, key, userDef) {

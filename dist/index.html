@@ -1,69 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Document</title>
-</head>
-
-<body>
-  <!-- 给模版中的属性增加一个收集器 dep -->
-  <!-- 页面渲染的时候 将渲染逻辑封装到watcher中 vm._update(vm._render()) -->
-  <!-- 让dep记住这个watcher即可，稍后属性变化了可以找到对应的dep中存放的watcher进行重新渲染 -->
-  <!-- 观察者模式 -->
-  <div id="app" style="overflow: hidden">
-    {{arr}}
-    {{msg}}
-    {{user}}
-    {{user}}
-    {{user}}
-    {{user}}
-  </div>
-  <script src="vue.js"></script>
-  <script>
-    // 响应式的数据变化，数据变化了我可以监控到数据的变化
-    // 数据的取值和更改值我们要监控到
-    const vm = new Vue({
-      data() {
-        return {
-          msg: "hello world",
-          age: 18,
-          obj: {
-            test: 123,
-            testObj: {
-              a: 1,
+  <body>
+    <!-- 给模版中的属性增加一个收集器 dep -->
+    <!-- 页面渲染的时候 将渲染逻辑封装到watcher中 vm._update(vm._render()) -->
+    <!-- 让dep记住这个watcher即可，稍后属性变化了可以找到对应的dep中存放的watcher进行重新渲染 -->
+    <!-- 观察者模式 -->
+    <div id="app"></div>
+    <script src="vue.js"></script>
+    <script>
+      // 响应式的数据变化，数据变化了我可以监控到数据的变化
+      // 数据的取值和更改值我们要监控到
+      const vm = new Vue({
+        data() {
+          return {
+            msg: "hello world",
+            age: 18,
+            obj: {
+              test: 123,
+              testObj: {
+                a: 1,
+              },
+            },
+            arr: [123, { a: 1, test: 2 }, [123]],
+          };
+        },
+        computed: {
+          user: {
+            get() {
+              console.log("run");
+              return this.age + "computed";
             },
           },
-          arr: [123, { a: 1, test: 2 }, [123]],
-        };
-      },
-      computed: {
-        user: {
-          get() {
-            console.log('run')
-            return this.age + 'computed'
-          },
-        }
-      },
-      watch: {
-        msg(newValue, oldValue) {
-          console.log("🚀 ~ file: index.html ~ line 51 ~ msg ~ newValue,oldValue", newValue, oldValue)
-
-        }
-      },
-      created() {
-        console.log(3);
-      },
-      el: "#app", // 我们要将数据解析到el元素上
-    });
-    setTimeout(() => {
-      vm.arr.push(100)
-      vm.arr[2].push('test')
-      vm.age = 777
-      vm.msg = 'change'
-    }, 2000)
+        },
+        watch: {
+          msg(newValue, oldValue) {},
+        },
+        created() {},
+        el: "#app", // 我们要将数据解析到el元素上
+      });
+      setTimeout(() => {
+        vm.arr.push(100);
+        vm.arr[2].push("test");
+        vm.age = 777;
+        vm.msg = "change";
+      }, 2000);
       // 1）将数据先处理成响应式 initState（针对对象来说主要是增加defineProperty 针对数据就是重写方法）
       // 2）模板编译：将模版先转换成ast语法树，将ast语法树生成render方法
       // 3）调用render函数 会进行取值操作 产生对应的虚拟DOM render(){ _c('div',null,_v(name)) }
@@ -75,7 +62,6 @@
 
       // 从一个东西变成另一个东西 语法之间的转化 es6 -> es5
       // css压缩 我们需要先变成语法树再重新组装代码成为新的语法 将template语法转换成render函数
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>

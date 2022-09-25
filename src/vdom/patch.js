@@ -1,11 +1,28 @@
 import { isSameVnode } from "./index";
+
+function createComponent(vnode) {
+  let i = vnode.data;
+  if ((i = i.hook) && (i = i.init)) {
+    i(vnode); // 初始化组件
+  }
+  if (vnode.componentInstance) {
+    return true;
+  }
+}
+
 export function createElm(vnode) {
   let { tag, data, children, text } = vnode;
   if (typeof tag === "string") {
+    // 创建真实元素也要区分是组件还是元素
+    if (createComponent(vnode)) {
+      // 是组件
+      return vnode.componentInstance.$el;
+    }
+
     vnode.el = document.createElement(tag);
     patchProps(vnode.el, {}, data);
     children.forEach((child) => {
-      vnode.el.appendChild(createElm(child));
+      vnode.el.appendChild(createElm(child)); // 会将组件创建的元素插入到父元素中
     });
   } else {
     vnode.el = document.createTextNode(text);
@@ -43,6 +60,10 @@ export function patchProps(el, oldProps = {}, props = {}) {
 }
 
 export function patch(oldVNode, newVNode) {
+  if (!oldVNode) {
+    // 组件的挂载
+    return createElm(newVNode);
+  }
   // 是否是真实节点(dom)，nodeType为dom上的原生属性
   const isRealElement = oldVNode.nodeType;
   if (isRealElement) {

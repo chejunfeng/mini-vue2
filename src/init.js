@@ -31,11 +31,9 @@ export function initMixin(Vue) {
         // 没有写模版，但写了el
         template = el.outerHTML;
       } else {
-        if (el) {
-          template = ops.template; // 如果有el，则采用模版的内容
-        }
+        template = ops.template; // 采用模版的内容
       }
-      if (template && el) {
+      if (template) {
         // 这里需要对模版进行编译
         const render = compileToFunction(template);
         ops.render = render;

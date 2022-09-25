@@ -55,6 +55,22 @@
       this.options = mergeOptions(this.options, mixin);
       return this;
     };
+
+    Vue.extend = function (options) {
+      function Sub() {
+        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        // 最终使用一个组件就是new一个实例
+        this._init(options); // 默认对子类进行初始化操作
+
+      }
+
+      Sub.prototype = Object.create(Vue.prototype);
+      Sub.prototype.constructor = Sub;
+      Sub.options = options; // 保存用户传递的选项
+
+      return Sub;
+    };
   }
 
   function _typeof(obj) {
@@ -1114,7 +1130,15 @@
       var vm = this;
       var el = vm.$el; // patch既有初始化的功能 又有更新的逻辑
 
-      vm.$el = patch(el, vnode);
+      var prevVnode = vm._vnode;
+      vm._vnode = vnode; // 把组件第一次产生的虚拟节点保存到_vnode上
+
+      if (prevVnode) {
+        // 之前渲染过
+        vm.$el = patch(prevVnode, vnode);
+      } else {
+        vm.$el = patch(el, vnode);
+      }
     }; // _c('div',{},...children);
 
 
@@ -1223,26 +1247,6 @@
   initLifeCycle(Vue);
   initGlobalAPI(Vue);
   initStateMixin(Vue);
-  var render1 = compileToFunction("<ul>\n<li key=\"d\">4</li>\n<li key=\"b\">1</li>\n<li key=\"c\">2</li>\n<li key=\"e\">3</li>\n</ul>");
-  var vm1 = new Vue({
-    data: {
-      name: "test"
-    }
-  });
-  var prevVnode = render1.call(vm1);
-  var el = createElm(prevVnode);
-  document.body.appendChild(el);
-  var render2 = compileToFunction("<ul>\n<li key=\"1\">1</li>\n<li key=\"2\">2</li>\n<li key=\"3\">3</li>\n</ul>");
-  var vm2 = new Vue({
-    data: {
-      name: "test12"
-    }
-  });
-  var nextVnode = render2.call(vm2);
-  setTimeout(function () {
-    patch(prevVnode, nextVnode); // let newEl = createElm(nextVnode);
-    // el.parentNode.replaceChild(newEl, el);
-  }, 4000);
 
   return Vue;
 
